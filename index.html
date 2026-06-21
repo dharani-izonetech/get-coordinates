@@ -1,76 +1,119 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Coordinates</title>
+    <title>Best GPS Coordinates</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
         }
 
-        .box {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            max-width: 500px;
-        }
-
         button {
-            padding: 10px 20px;
+            padding: 12px 20px;
+            font-size: 16px;
             cursor: pointer;
         }
 
         textarea {
             width: 100%;
-            height: 80px;
-            margin-top: 10px;
+            margin-top: 20px;
+            height: 120px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <h2>Get My GPS Coordinates</h2>
+    <h2>Get Best GPS Location</h2>
 
     <button onclick="getLocation()">Get Location</button>
 
-    <div class="box">
-        <p><strong>Latitude:</strong> <span id="lat">-</span></p>
-        <p><strong>Longitude:</strong> <span id="lng">-</span></p>
-        <p><strong>Accuracy:</strong> <span id="accuracy">-</span> meters</p>
-
-        <textarea id="copyText" readonly></textarea>
-    </div>
+    <textarea id="output" readonly></textarea>
 
     <script>
+        let watchId;
+        let bestAccuracy = Infinity;
+        let bestLat = null;
+        let bestLng = null;
+
         function getLocation() {
+
+            bestAccuracy = Infinity;
+
+            document.getElementById("output").value =
+                "Searching for best GPS signal...\nPlease wait 20-30 seconds.";
+
             if (!navigator.geolocation) {
-                alert("Geolocation is not supported by this browser.");
+                document.getElementById("output").value =
+                    "Geolocation is not supported by this browser.";
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(
+            watchId = navigator.geolocation.watchPosition(
+
                 function(position) {
+
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
 
-                    document.getElementById("lat").textContent = lat;
-                    document.getElementById("lng").textContent = lng;
-                    document.getElementById("accuracy").textContent = accuracy;
+                    if (accuracy < bestAccuracy) {
 
-                    document.getElementById("copyText").value =
-                        lat + ", " + lng;
+                        bestAccuracy = accuracy;
+                        bestLat = lat;
+                        bestLng = lng;
+
+                        document.getElementById("output").value =
+                            bestLat + "," + bestLng +
+                            "\nAccuracy: " +
+                            bestAccuracy.toFixed(2) + " meters";
+                    }
+
+                    // Stop automatically when accuracy is very good
+                    if (accuracy <= 5) {
+
+                        navigator.geolocation.clearWatch(watchId);
+
+                        document.getElementById("output").value =
+                            bestLat + "," + bestLng +
+                            "\nAccuracy: " +
+                            bestAccuracy.toFixed(2) + " meters" +
+                            "\n\nGPS lock achieved.";
+                    }
                 },
+
                 function(error) {
-                    alert("Error: " + error.message);
+
+                    document.getElementById("output").value =
+                        "Error: " + error.message;
                 },
+
                 {
                     enableHighAccuracy: true,
-                    timeout: 10000,
+                    timeout: 30000,
                     maximumAge: 0
                 }
             );
+
+            // Stop after 30 seconds and keep the best reading
+            setTimeout(() => {
+
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+
+                    if (bestLat !== null) {
+
+                        document.getElementById("output").value =
+                            bestLat + "," + bestLng +
+                            "\nAccuracy: " +
+                            bestAccuracy.toFixed(2) + " meters" +
+                            "\n\nBest location found within 30 seconds.";
+                    }
+                }
+
+            }, 30000);
         }
     </script>
 
