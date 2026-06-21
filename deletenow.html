@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Coordinates</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 500px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Get My GPS Coordinates</h2>
+
+    <button onclick="getLocation()">Get Location</button>
+
+    <div class="box">
+        <p><strong>Latitude:</strong> <span id="lat">-</span></p>
+        <p><strong>Longitude:</strong> <span id="lng">-</span></p>
+        <p><strong>Accuracy:</strong> <span id="accuracy">-</span> meters</p>
+
+        <textarea id="copyText" readonly></textarea>
+    </div>
+
+    <script>
+        function getLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by this browser.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    document.getElementById("lat").textContent = lat;
+                    document.getElementById("lng").textContent = lng;
+                    document.getElementById("accuracy").textContent = accuracy;
+
+                    document.getElementById("copyText").value =
+                        lat + ", " + lng;
+                },
+                function(error) {
+                    alert("Error: " + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+    </script>
+
+</body>
+</html>
